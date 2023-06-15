@@ -210,6 +210,8 @@ MonoBehaviour:
   - {fileID: 23983767}
   - {fileID: 2147318039}
   - {fileID: 618128174}
+  mainSpawnPoint: {fileID: 305420821}
+  gravityWait: 0
 --- !u!1 &305420820
 GameObject:
   m_ObjectHideFlags: 0

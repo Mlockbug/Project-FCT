@@ -205,11 +205,11 @@ MonoBehaviour:
   - {fileID: 1959490851365434518, guid: 37fb09f579f55c243b408bc43cd3ee72, type: 3}
   - {fileID: 8897630657235217266, guid: 4bfb37c5d06a39a4ab827642d433259b, type: 3}
   nextPieceSpawns:
-  - {fileID: 618128173}
-  - {fileID: 2147318038}
-  - {fileID: 23983766}
-  - {fileID: 1086071045}
-  - {fileID: 1833698160}
+  - {fileID: 1833698161}
+  - {fileID: 1086071046}
+  - {fileID: 23983767}
+  - {fileID: 2147318039}
+  - {fileID: 618128174}
 --- !u!1 &305420820
 GameObject:
   m_ObjectHideFlags: 0

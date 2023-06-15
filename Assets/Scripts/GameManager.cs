@@ -9,7 +9,7 @@ public class GameManager : MonoBehaviour {
 	Rigidbody2D currentPiece;
 	GameObject tempPiece, r_tempBlock;
 	Queue<GameObject> bag = new Queue<GameObject>();
-	GameObject[] nextPieces;
+	GameObject[] nextPieces = new GameObject[5];
 	bool mustDrop, refillBag;
 	float gravityWait;
 	int count;
@@ -50,6 +50,7 @@ public class GameManager : MonoBehaviour {
 		if (start) {
 			for (int i = 0; i< 5; i++) {
 				nextPieces[i] = bag.Dequeue();
+				RefreshNextPieces();
 			}
 		}
 	}

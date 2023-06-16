@@ -13,20 +13,18 @@ public class TetrominoLogic : MonoBehaviour {
 	// Update is called once per frame
 	void Update() {
 		if (mustDrop) {
+			Debug.Log("fdggfhhjgljhlk;fsd");
 			StartCoroutine(Gravity());
 		}
-		if (Input.GetAxisRaw("Vertical") < 0) {
-			if (gravityDelay != 1f) {
-				StopCoroutine(Gravity());
-				mustDrop = true;
-			}
-			gravityDelay = 1f;
+		if (Input.GetAxisRaw("Vertical") == -1) {
+			gravityDelay = 0.2f;
 		}
 		else
-			gravityDelay = 2f;
+			gravityDelay = 1f;
 	}
 	IEnumerator Gravity() {
 		mustDrop = false;
+
 		yield return new WaitForSeconds(gravityDelay);
 		transform.position += (new Vector3(0f, -1f, 0f));
 		mustDrop = true;

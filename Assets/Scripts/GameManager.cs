@@ -7,13 +7,12 @@ public class GameManager : MonoBehaviour {
 	public Transform[] nextPieceSpawns;
 	public Transform mainSpawnPoint;
 	GameObject[] tempTetrominoes;
-	public Rigidbody2D currentPiece;
+	public GameObject currentPiece;
 	GameObject tempPiece, r_tempBlock;
 	Queue<GameObject> bag = new Queue<GameObject>();
 	Queue<GameObject> tempNextPiece = new Queue<GameObject>();
 	GameObject[] nextPieces = new GameObject[5];
 	bool mustDrop, refillBag;
-	public float gravityWait;
 	int count;
 	void Start() {
 		FillBag(true);
@@ -26,18 +25,9 @@ public class GameManager : MonoBehaviour {
 		if (currentPiece == null) {
 			SpawnNewPiece(false);
 		}
-		if (mustDrop) {
-			StartCoroutine(Gravity());
-		}
 	}
 
-	IEnumerator Gravity() {
-		yield return new WaitForSeconds(gravityWait);
-		if (!mustDrop) {
-			currentPiece.MovePosition(new Vector2(0f, -1f));
-		}
-		StopCoroutine(Gravity());
-	}
+	
 	void FillBag(bool start) {
 		tempTetrominoes = tetrominoes;
 		while (count < 7) {
@@ -50,35 +40,37 @@ public class GameManager : MonoBehaviour {
 		}
 		count = 0;
 		if (start) {
-			for (int i = 0; i < 5; i++) {
-				nextPieces[i] = bag.Dequeue();
-			}
 			SpawnNewPiece(start);
 			RefreshNextPieces();
 		}
 	}
 	void SpawnNewPiece(bool start) {
 		if (start) {
+			currentPiece = Instantiate(bag.Dequeue(), mainSpawnPoint.position, mainSpawnPoint.rotation);
+			for (int i = 0; i < 5; i++) {
+				nextPieces[i] = bag.Dequeue();
+			}
+		}
+		else {
 			for (int i = 0; i < 5; i++) {
 				Destroy(tempNextPiece.Dequeue());
 			}
+			currentPiece = Instantiate(nextPieces[0], mainSpawnPoint.position, mainSpawnPoint.rotation);
+			nextPieces[0] = null;
+			MoveNextPieces();
 		}
-		currentPiece = Instantiate(nextPieces[0], mainSpawnPoint.position, mainSpawnPoint.rotation).GetComponent<Rigidbody2D>();
-		nextPieces[0] = null;
-		MoveNextPieces();
 		if (currentPiece.name.Contains("O-") || currentPiece.name.Contains("I-")) {
-			Debug.Log("SSSS");
-			currentPiece.transform.position += new Vector3(0, 0.5f, 0);
+			currentPiece.transform.position += new Vector3(0.5f, 0.5f, 0);
 		}
+		currentPiece.gameObject.AddComponent<TetrominoLogic>();
 	}
 
 	void RefreshNextPieces() {
 		tempNextPiece.Clear();
-		for (int i = 0; i<5; i++) {
+		for (int i = 0; i < 5; i++) {
 			r_tempBlock = Instantiate(nextPieces[i], nextPieceSpawns[i].position, nextPieceSpawns[i].rotation);
-			if (r_tempBlock.name.Contains("O-") || r_tempBlock.name.Contains("I-")){
+			if (r_tempBlock.name.Contains("O-") || r_tempBlock.name.Contains("I-")) {
 				r_tempBlock.transform.position += new Vector3(0, 0.5f, 0);
-				Debug.Log("SDFSDF");
 			}
 			tempNextPiece.Enqueue(r_tempBlock);
 		}

@@ -6,7 +6,7 @@ public class TetrisBehaviour : MonoBehaviour {
 	int width = 12;
 	int length = 25;
 
-	public GameObject[,] grid;
+	public GameObject[,] grid = new GameObject[12,25];
 	public GameObject tile, matrix;
 	public Sprite[] sprites;
 	
@@ -49,6 +49,7 @@ public class TetrisBehaviour : MonoBehaviour {
 				}
 			}
 		}
+		this.gameObject.AddComponent<FullRandomSpawn>();
 	}
 
 	void Update() {

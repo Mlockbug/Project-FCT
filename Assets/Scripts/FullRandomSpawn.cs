@@ -14,7 +14,6 @@ public class FullRandomSpawn : MonoBehaviour
         manager = GameObject.Find("Game manager").GetComponent<TetrisBehaviour>();
         grid = manager.grid;
         spawnArea = new GameObject[,] { { grid[4, 22], grid[5, 22], grid[6,22], grid[7,22]}, { grid[4, 23], grid[5, 23], grid[6, 23], grid[7, 23]} };
-        SpawnNewPiece();
     }
 
     
@@ -23,9 +22,9 @@ public class FullRandomSpawn : MonoBehaviour
         
     }
 
-    void SpawnNewPiece() {
-        int piece = Random.Range(0, 7);
-        Debug.Log(piece);
+    public (int,GameObject[]) SpawnNewPiece(int piece) {
+        if (piece == 12)
+            piece = Random.Range(0, 7);
         switch (piece) {
             case 0:
                 area = new GameObject[] { spawnArea[0, 0], spawnArea[0, 1], spawnArea[0, 2], spawnArea[0, 3] };
@@ -49,8 +48,7 @@ public class FullRandomSpawn : MonoBehaviour
                 area = new GameObject[] { spawnArea[1, 0], spawnArea[0, 1], spawnArea[1, 1], spawnArea[0, 2] };
                 break;
         }
-        foreach (GameObject x in area) {
-            x.GetComponent<SpriteRenderer>().sprite = manager.sprites[piece];
-		}
+
+        return (piece, area);
 	}
 }

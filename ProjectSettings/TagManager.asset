@@ -4,10 +4,9 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Falling
-  - Blocking
-  - Walls
-  - Waiting
+  - Solid_W
+  - Solid
+  - Empty
   layers:
   - Default
   - TransparentFX

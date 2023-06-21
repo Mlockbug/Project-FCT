@@ -22,9 +22,17 @@ public class FullRandomSpawn : MonoBehaviour
         
     }
 
-    public (int,GameObject[]) SpawnNewPiece(int piece) {
-        if (piece == 12)
-            piece = Random.Range(0, 7);
+    public int ChoseNextPiece(int spawnMode) {
+        int block = 0;
+        switch (spawnMode) {
+            case 0:
+                block = Random.Range(0, 7);
+                break;
+        }
+        return block;
+	}
+
+    public GameObject[] GetSpawnArea(int piece) {
         switch (piece) {
             case 0:
                 area = new GameObject[] { spawnArea[0, 0], spawnArea[0, 1], spawnArea[0, 2], spawnArea[0, 3] };
@@ -48,7 +56,6 @@ public class FullRandomSpawn : MonoBehaviour
                 area = new GameObject[] { spawnArea[1, 0], spawnArea[0, 1], spawnArea[1, 1], spawnArea[0, 2] };
                 break;
         }
-
-        return (piece, area);
-	}
+        return area;
+    }
 }

@@ -31,10 +31,10 @@ public class TetrisBehaviour : MonoBehaviour {
 
 	void Update() {
 		if (mustSpawn) {
-			currentPieceIndex = spawnSystem.SpawnNewPiece(12).Item1;
+			currentPieceIndex = spawnSystem.ChoseNextPiece(0);
 			for (int i = 0; i < 4; i++){
-				spawnSystem.SpawnNewPiece(currentPieceIndex).Item2[i].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
-				blocks[i] = spawnSystem.SpawnNewPiece(currentPieceIndex).Item2[i];
+				spawnSystem.GetSpawnArea(currentPieceIndex)[i].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
+				blocks[i] = spawnSystem.GetSpawnArea(currentPieceIndex)[i];
 			}
 			mustSpawn = false;
 			mustDrop = true;
@@ -74,9 +74,7 @@ public class TetrisBehaviour : MonoBehaviour {
 			mustDrop = true;
 		}
 		else {
-			for(int i =0; i <4; i++) {
-				blocks[i].tag = "Solid";
-			}
+
 			StartCoroutine(LockDelay());
 		}
 		StopCoroutine(Gravity());
@@ -85,6 +83,9 @@ public class TetrisBehaviour : MonoBehaviour {
 	IEnumerator LockDelay() {
 		yield return new WaitForSeconds(lockDelay);
 		if (!clear) {
+			for (int i = 0; i < 4; i++) {
+				blocks[i].tag = "Solid";
+			}
 			mustSpawn = true;
 		}
 		StopCoroutine(LockDelay());

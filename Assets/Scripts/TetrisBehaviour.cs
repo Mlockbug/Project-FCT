@@ -11,7 +11,7 @@ public class TetrisBehaviour : MonoBehaviour {
 	public Sprite[] sprites;
 	bool mustSpawn = true;
 	bool mustDrop;
-	FullRandomSpawn spawnSystem;
+	SpawnSystem spawnSystem;
 	int currentPieceIndex;
 	GameObject[] blocks = new GameObject[4];
 	public float gravityDelay, lockDelay;
@@ -26,12 +26,12 @@ public class TetrisBehaviour : MonoBehaviour {
 				ChangeSprite(i, j);
 			}
 		}
-		spawnSystem = this.gameObject.AddComponent<FullRandomSpawn>();
+		spawnSystem = this.gameObject.AddComponent<SpawnSystem>();
 	}
 
 	void Update() {
 		if (mustSpawn) {
-			currentPieceIndex = spawnSystem.ChoseNextPiece(0);
+			currentPieceIndex = spawnSystem.ChoseNextPiece(1);
 			for (int i = 0; i < 4; i++){
 				spawnSystem.GetSpawnArea(currentPieceIndex)[i].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
 				blocks[i] = spawnSystem.GetSpawnArea(currentPieceIndex)[i];

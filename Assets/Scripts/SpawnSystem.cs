@@ -2,12 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FullRandomSpawn : MonoBehaviour
+public class SpawnSystem : MonoBehaviour
 {
     TetrisBehaviour manager;
     GameObject[,] grid;
     GameObject[,] spawnArea;
+    public GameObject[] sprites;
+    public GameObject tile;
     GameObject[] area;
+    GameObject[] nextPieces;
+    GameObject[] nextPieceSpawns;
+    Queue<int> bag = new Queue<int>();
 
     void Start()
     {
@@ -27,6 +32,21 @@ public class FullRandomSpawn : MonoBehaviour
         switch (spawnMode) {
             case 0:
                 block = Random.Range(0, 7);
+                break;
+            case 1:
+                int count = 0;
+                int[] tetrominoesIndex = new int[] {0,1,2,3,4,5,6};
+                if (bag.Count == 0) {
+                    while (count < 7) {
+                        int randomTemp = Random.Range(0, 7);
+                        if (tetrominoesIndex[randomTemp] != 10) {
+                            bag.Enqueue(tetrominoesIndex[randomTemp]);
+                            tetrominoesIndex[randomTemp] = 10;
+                            count++;
+                        }
+                    }
+                }
+                block = bag.Dequeue();
                 break;
         }
         return block;
@@ -58,4 +78,8 @@ public class FullRandomSpawn : MonoBehaviour
         }
         return area;
     }
+
+    public void NextPieces() {
+
+	}
 }

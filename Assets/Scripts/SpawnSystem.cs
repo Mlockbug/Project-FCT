@@ -7,27 +7,35 @@ public class SpawnSystem : MonoBehaviour
     TetrisBehaviour manager;
     GameObject[,] grid;
     GameObject[,] spawnArea;
-    public GameObject[] sprites;
-    public GameObject tile;
     GameObject[] area;
-    GameObject[] nextPieces;
-    GameObject[] nextPieceSpawns;
+    int[] nextPieces = new int[5];
+    GameObject[] nextPieceSpawns = new GameObject[5];
+    Vector2[,] nextPieceSpawnsTileLocations;
     Queue<int> bag = new Queue<int>();
+    Queue<GameObject> nextPiecesObjects = new Queue<GameObject>();
 
-    void Start()
-    {
-        manager = GameObject.Find("Game manager").GetComponent<TetrisBehaviour>();
+    void Start() {
+		nextPieceSpawnsTileLocations = new Vector2[7, 4] { { new Vector2(-0.5f,0f), new Vector2(-1.5f, 0f), new Vector2(0.5f, 0f), new Vector2(1.5f, 0f) },
+                                                           { new Vector2(0f,0f), new Vector2(-1f, 0f), new Vector2(-1f, 1f), new Vector2(1f, 0f) },
+                                                           { new Vector2(0f,0f), new Vector2(-1f, 0f), new Vector2(1f, 1f), new Vector2(1f, 0f) },
+                                                           { new Vector2(-0.5f,-0.5f), new Vector2(-0.5f, 0.5f), new Vector2(0.5f, -0.5f), new Vector2(0.5f, 0.5f) },
+                                                           { new Vector2(-0.5f,0f), new Vector2(-1.5f, 0f), new Vector2(0.5f, 0f), new Vector2(1.5f, 0f) },
+                                                           { new Vector2(-0.5f,0f), new Vector2(-1.5f, 0f), new Vector2(0.5f, 0f), new Vector2(1.5f, 0f) },
+                                                           { new Vector2(-0.5f,0f), new Vector2(-1.5f, 0f), new Vector2(0.5f, 0f), new Vector2(1.5f, 0f) }};
+		manager = GameObject.Find("Game manager").GetComponent<TetrisBehaviour>();
         grid = manager.grid;
         spawnArea = new GameObject[,] { { grid[4, 22], grid[5, 22], grid[6,22], grid[7,22]}, { grid[4, 23], grid[5, 23], grid[6, 23], grid[7, 23]} };
+        for (int i = 0;  i < 5; i++) {
+            nextPieceSpawns[i] = GameObject.Find("Next pieces").transform.GetChild(i).gameObject;
+		}
     }
 
-    
     void Update()
     {
-        
+
     }
 
-    public int ChoseNextPiece(int spawnMode) {
+    public int ChoseNextPiece(int spawnMode, bool start) {
         int block = 0;
         switch (spawnMode) {
             case 0:
@@ -46,7 +54,14 @@ public class SpawnSystem : MonoBehaviour
                         }
                     }
                 }
-                block = bag.Dequeue();
+                if (start) {
+                    for (int i = 0; i < 5; i++) {
+                        nextPieces[i] = bag.Dequeue();
+                    }
+                }
+                else
+                    SortNextPieces();
+                block = nextPieces[0];
                 break;
         }
         return block;
@@ -79,7 +94,23 @@ public class SpawnSystem : MonoBehaviour
         return area;
     }
 
-    public void NextPieces() {
+    public void SortNextPieces() {
+        for (int i = 1; i < 5; i++) {
+            nextPieces[i - 1] = nextPieces[i];
+		}
+        for(int i = 0; i < 4; i++) {
+            SpawnNextPieces(nextPieces[i], nextPieceSpawns[i]);
+		}
+	}
 
+    public void SpawnNextPieces(int piece, GameObject spawnPoint) {
+        while (nextPiecesObjects.Count > 0) {
+            Destroy(nextPiecesObjects.Dequeue());
+		}
+        switch (piece) {
+            case 0:
+                //nextPiecesObjects.Enqueue(Instantiate(manager.tile, ))
+                break;
+		}
 	}
 }

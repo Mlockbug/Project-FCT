@@ -16,8 +16,8 @@ public class SpawnSystem : MonoBehaviour
 
     void Start() {
 		nextPieceSpawnsTileLocations = new Vector2[7, 4] { { new Vector2(-0.5f,0f), new Vector2(-1.5f, 0f), new Vector2(0.5f, 0f), new Vector2(1.5f, 0f) },
-                                                           { new Vector2(0f,0f), new Vector2(-1f, 0f), new Vector2(-1f, 1f), new Vector2(1f, 0f) },
-                                                           { new Vector2(0f,0f), new Vector2(-1f, 0f), new Vector2(1f, 1f), new Vector2(1f, 0f) },
+                                                           { new Vector2(0f,-0.5f), new Vector2(-1f, -0.5f), new Vector2(-1f, 0.5f), new Vector2(1f, -0.5f) },
+                                                           { new Vector2(0f,-0.5f), new Vector2(-1f, -0.5f), new Vector2(1f, 0.5f), new Vector2(1f, -0.5f) },
                                                            { new Vector2(-0.5f,-0.5f), new Vector2(-0.5f, 0.5f), new Vector2(0.5f, -0.5f), new Vector2(0.5f, 0.5f) },
                                                            { new Vector2(-1f,-0.5f), new Vector2(1f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, -0.5f) },
                                                            { new Vector2(-1f,-0.5f), new Vector2(0f, -0.5f), new Vector2(0f, 0.5f), new Vector2(1f, -0.5f) },
@@ -55,13 +55,12 @@ public class SpawnSystem : MonoBehaviour
                     }
                 }
                 if (start) {
-                    for (int i = 1; i < 5; i++) {
+                    for (int i = 0; i < 5; i++) {
                         nextPieces[i] = bag.Dequeue();
                     }
                 }
-                SortNextPieces();
-                SpawnNextPieces();
                 block = nextPieces[0];
+                SortNextPieces();
                 break;
         }
         return block;

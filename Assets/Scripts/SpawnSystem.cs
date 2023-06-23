@@ -19,9 +19,9 @@ public class SpawnSystem : MonoBehaviour
                                                            { new Vector2(0f,0f), new Vector2(-1f, 0f), new Vector2(-1f, 1f), new Vector2(1f, 0f) },
                                                            { new Vector2(0f,0f), new Vector2(-1f, 0f), new Vector2(1f, 1f), new Vector2(1f, 0f) },
                                                            { new Vector2(-0.5f,-0.5f), new Vector2(-0.5f, 0.5f), new Vector2(0.5f, -0.5f), new Vector2(0.5f, 0.5f) },
-                                                           { new Vector2(-0.5f,0f), new Vector2(-1.5f, 0f), new Vector2(0.5f, 0f), new Vector2(1.5f, 0f) },
-                                                           { new Vector2(-0.5f,0f), new Vector2(-1.5f, 0f), new Vector2(0.5f, 0f), new Vector2(1.5f, 0f) },
-                                                           { new Vector2(-0.5f,0f), new Vector2(-1.5f, 0f), new Vector2(0.5f, 0f), new Vector2(1.5f, 0f) }};
+                                                           { new Vector2(-1f,-0.5f), new Vector2(1f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, -0.5f) },
+                                                           { new Vector2(-1f,-0.5f), new Vector2(0f, -0.5f), new Vector2(0f, 0.5f), new Vector2(1f, -0.5f) },
+                                                           { new Vector2(-1f,0.5f), new Vector2(0f, 0.5f), new Vector2(0f, -0.5f), new Vector2(1f, -0.5f) }};
 		manager = GameObject.Find("Game manager").GetComponent<TetrisBehaviour>();
         grid = manager.grid;
         spawnArea = new GameObject[,] { { grid[4, 22], grid[5, 22], grid[6,22], grid[7,22]}, { grid[4, 23], grid[5, 23], grid[6, 23], grid[7, 23]} };
@@ -55,12 +55,12 @@ public class SpawnSystem : MonoBehaviour
                     }
                 }
                 if (start) {
-                    for (int i = 0; i < 5; i++) {
+                    for (int i = 1; i < 5; i++) {
                         nextPieces[i] = bag.Dequeue();
                     }
                 }
-                else
-                    SortNextPieces();
+                SortNextPieces();
+                SpawnNextPieces();
                 block = nextPieces[0];
                 break;
         }
@@ -98,19 +98,20 @@ public class SpawnSystem : MonoBehaviour
         for (int i = 1; i < 5; i++) {
             nextPieces[i - 1] = nextPieces[i];
 		}
-        for(int i = 0; i < 4; i++) {
-            SpawnNextPieces(nextPieces[i], nextPieceSpawns[i]);
-		}
+        nextPieces[4] = bag.Dequeue();
+        SpawnNextPieces();
 	}
 
-    public void SpawnNextPieces(int piece, GameObject spawnPoint) {
+    public void SpawnNextPieces() {
         while (nextPiecesObjects.Count > 0) {
             Destroy(nextPiecesObjects.Dequeue());
 		}
-        switch (piece) {
-            case 0:
-                //nextPiecesObjects.Enqueue(Instantiate(manager.tile, ))
-                break;
+        for (int i = 0; i <5; i++) {
+            for (int j = 0; j<4; j++) {
+                GameObject temp = Instantiate(manager.tile, nextPieceSpawns[i].transform.position + new Vector3(nextPieceSpawnsTileLocations[nextPieces[i], j].x, nextPieceSpawnsTileLocations[nextPieces[i], j].y, 0), Quaternion.identity);
+                nextPiecesObjects.Enqueue(temp);
+                temp.GetComponent<SpriteRenderer>().sprite = manager.sprites[nextPieces[i]];
+			}
 		}
 	}
 }

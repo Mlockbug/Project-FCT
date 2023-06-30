@@ -10,12 +10,12 @@ public class TetrisBehaviour : MonoBehaviour {
 	public GameObject tile, matrix;
 	public Sprite[] sprites;
 	bool mustSpawn = true;
-	bool mustDrop;
+	bool mustDrop, canMove;
 	SpawnSystem spawnSystem;
 	int currentPieceIndex = 10;
 	GameObject[] blocks = new GameObject[4];
 	public float gravityDelay, lockDelay;
-	public bool clear;
+	public bool g_clear, m_clear;
 
 	void Start() {
 		grid = new GameObject[width, length];
@@ -41,16 +41,50 @@ public class TetrisBehaviour : MonoBehaviour {
 			}
 			mustSpawn = false;
 			mustDrop = true;
+			canMove = true;
 		}
 		if (mustDrop) {
 			StartCoroutine(Gravity());
 		}
+		if (canMove && Input.GetAxisRaw("Horizontal") != 0) {
+			StartCoroutine(MovePiece());
+		}
+	}
+
+	IEnumerator MovePiece() {
+		m_clear = true;
+		canMove = false;
+		yield return new WaitForSeconds(0.05f);
+		Queue<int> positions = new Queue<int>();
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < length; j++) {
+				for (int l = 0; l < 4; l++) {
+					if (grid[i, j] == blocks[l]) {
+						positions.Enqueue(i);
+						positions.Enqueue(j);
+						if (grid[i + (int)Input.GetAxisRaw("Horizontal"), j].tag.Contains("Solid")) {
+							m_clear = false;
+						}
+					}
+				}
+			}
+		}
+		if (m_clear) {
+			for (int i = 0; i < 4; i++) {
+				int tempX = positions.Dequeue();
+				int tempY = positions.Dequeue();
+				ChangeSprite(tempX, tempY);
+				grid[tempX + (int)Input.GetAxisRaw("Horizontal"), tempY].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
+				blocks[i] = grid[tempX + (int)Input.GetAxisRaw("Horizontal"), tempY];
+			}
+		}
+		canMove = true;
 	}
 
 	IEnumerator Gravity() {
 		mustDrop = false;
 		yield return new WaitForSeconds(gravityDelay);
-		clear = true;
+		g_clear = true;
 
 		Queue<int> positions = new Queue<int>();
 		for (int i = 0; i < width; i++) {
@@ -60,13 +94,13 @@ public class TetrisBehaviour : MonoBehaviour {
 						positions.Enqueue(i);
 						positions.Enqueue(j);
 						if (grid[i, j - 1].tag.Contains("Solid")) {
-							clear = false;
+							g_clear = false;
 						}
 					}
 				}
 			}
 		}
-		if (clear) {
+		if (g_clear) {
 			for (int i = 0; i < 4; i++) {
 				int tempX = positions.Dequeue();
 				int tempY = positions.Dequeue();
@@ -85,7 +119,7 @@ public class TetrisBehaviour : MonoBehaviour {
 
 	IEnumerator LockDelay() {
 		yield return new WaitForSeconds(lockDelay);
-		if (!clear) {
+		if (!g_clear) {
 			for (int i = 0; i < 4; i++) {
 				blocks[i].tag = "Solid";
 			}

@@ -15,7 +15,8 @@ public class TetrisBehaviour : MonoBehaviour {
 	int currentPieceIndex = 10;
 	GameObject[] blocks = new GameObject[4];
 	public float gravityDelay, lockDelay;
-	public bool g_clear, m_clear;
+	public bool justMoved;
+	int rotationState = 0;
 
 	void Start() {
 		grid = new GameObject[width, length];
@@ -31,6 +32,7 @@ public class TetrisBehaviour : MonoBehaviour {
 
 	void Update() {
 		if (mustSpawn) {
+			rotationState = 0;
 			if (currentPieceIndex == 10)
 				currentPieceIndex = spawnSystem.ChoseNextPiece(1, true);
 			else
@@ -47,36 +49,85 @@ public class TetrisBehaviour : MonoBehaviour {
 			StartCoroutine(Gravity());
 		}
 		if (canMove && Input.GetAxisRaw("Horizontal") != 0) {
-			StartCoroutine(MovePiece());
+			StartCoroutine(MovePiece(Input.GetAxisRaw("Horizontal")));
+		}
+		for (int i = 0; i < 4; i++) {
+			blocks[i].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
+		}
+		if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.UpArrow)) {
+			RotatePositive();
+		}
+		if (Input.GetKeyDown(KeyCode.Z)) {
+			RotateNegative();
 		}
 	}
 
-	IEnumerator MovePiece() {
-		m_clear = true;
-		canMove = false;
-		yield return new WaitForSeconds(0.05f);
-		Queue<int> positions = new Queue<int>();
+	(bool, Queue<int>, Stack<int>) CheckPositions(int xChange, int yChange, bool movement) {
+		bool clear = false;
+		Queue<int> q_positions = new Queue<int>();
+		Stack<int> s_positions = new Stack<int>();
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < length; j++) {
 				for (int l = 0; l < 4; l++) {
+					if (movement) {
+						if (Input.GetAxisRaw("Horizontal") < 0) {
+							q_positions.Enqueue(i);
+							q_positions.Enqueue(j);
+						}
+						else {
+							s_positions.Push(j);
+							s_positions.Push(i);
+						}
+					}
+					else {
+						q_positions.Enqueue(i);
+						q_positions.Enqueue(j);
+					}
 					if (grid[i, j] == blocks[l]) {
-						positions.Enqueue(i);
-						positions.Enqueue(j);
-						if (grid[i + (int)Input.GetAxisRaw("Horizontal"), j].tag.Contains("Solid")) {
-							m_clear = false;
+						if (grid[i + xChange, j + yChange].tag.Contains("Solid")) {
+							clear = false;
 						}
 					}
 				}
 			}
 		}
-		if (m_clear) {
+		return (clear,q_positions,s_positions);
+	}
+	void RotatePositive() {
+		switch (currentPieceIndex, rotationState) {
+			case (0,0):
+				break;
+		}
+	}
+	void RotateNegative() {
+
+	}
+	void WallKick() {
+
+	}
+
+	IEnumerator MovePiece(float direction) {
+		int tempX, tempY;
+		canMove = false;
+		yield return new WaitForSeconds(0.05f);
+
+		(bool, Queue<int>, Stack<int>) data = CheckPositions((int)direction, 0, true);
+		
+		if (data.Item1) {
 			for (int i = 0; i < 4; i++) {
-				int tempX = positions.Dequeue();
-				int tempY = positions.Dequeue();
+				if (direction < 0) {
+					tempX = data.Item2.Dequeue();
+					tempY = data.Item2.Dequeue();
+				}
+				else {
+					tempX = data.Item3.Pop();
+					tempY = data.Item3.Pop();
+				}
 				ChangeSprite(tempX, tempY);
 				grid[tempX + (int)Input.GetAxisRaw("Horizontal"), tempY].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
 				blocks[i] = grid[tempX + (int)Input.GetAxisRaw("Horizontal"), tempY];
 			}
+			justMoved = true;
 		}
 		canMove = true;
 	}
@@ -111,7 +162,6 @@ public class TetrisBehaviour : MonoBehaviour {
 			mustDrop = true;
 		}
 		else {
-
 			StartCoroutine(LockDelay());
 		}
 		StopCoroutine(Gravity());
@@ -119,11 +169,15 @@ public class TetrisBehaviour : MonoBehaviour {
 
 	IEnumerator LockDelay() {
 		yield return new WaitForSeconds(lockDelay);
-		if (!g_clear) {
+		if (!g_clear && !justMoved) {
 			for (int i = 0; i < 4; i++) {
 				blocks[i].tag = "Solid";
 			}
 			mustSpawn = true;
+		}
+		else {
+			justMoved = false;
+			mustDrop = true;
 		}
 		StopCoroutine(LockDelay());
 	}

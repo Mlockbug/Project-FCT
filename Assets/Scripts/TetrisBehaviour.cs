@@ -21,7 +21,7 @@ public class TetrisBehaviour : MonoBehaviour {
 	Vector2Int[,,] rotationOfset;
 
 	void Start() {
-		rotationOfset = new Vector2Int[7, 8, 4]{ { {  new Vector2Int(2, 1), new Vector2Int(1, 0), new Vector2Int(0, -1), new Vector2Int(-1, -2) },
+		rotationOfset = new Vector2Int[7, 8, 4] { { {new Vector2Int(2, 1), new Vector2Int(1, 0), new Vector2Int(0, -1), new Vector2Int(-1, -2) },
 												  { new Vector2Int(-2, -1), new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(1, 2) },
 												  { new Vector2Int(1, -2), new Vector2Int(0, -1), new Vector2Int(-1, 0), new Vector2Int(-2, 1) },
 												  { new Vector2Int(-1, 2), new Vector2Int(0, 1), new Vector2Int(1, 0), new Vector2Int(2, -1) },
@@ -36,7 +36,7 @@ public class TetrisBehaviour : MonoBehaviour {
 												  { new Vector2Int(-1, -1), new Vector2Int(-2, 0), new Vector2Int(0, 0), new Vector2Int(1, 1) },
 												  { new Vector2Int(1, 1), new Vector2Int(2, 0), new Vector2Int(0, 0), new Vector2Int(-1, -1) },
 												  { new Vector2Int(-1, 1), new Vector2Int(0, 2), new Vector2Int(0, 0), new Vector2Int(1, -1) },
-												  { new Vector2Int(1, -1), new Vector2Int(0, -2), new Vector2Int(0, 0), new Vector2Int(-1, -1) },
+												  { new Vector2Int(1, -1), new Vector2Int(0, -2), new Vector2Int(0, 0), new Vector2Int(-1, -1) } },
 												{ { new Vector2Int(1, 1), new Vector2Int(0, 0), new Vector2Int(-1, -1), new Vector2Int(0, -2) },
 												  { new Vector2Int(-1, -1), new Vector2Int(0, 0), new Vector2Int(1, 1), new Vector2Int(0, 2) },
 												  { new Vector2Int(1, -1), new Vector2Int(0, 0), new Vector2Int(-1, 1), new Vector2Int(-2, 0) },
@@ -89,6 +89,10 @@ public class TetrisBehaviour : MonoBehaviour {
 	}
 
 	void Update() {
+		if (Input.GetKey(KeyCode.L)) {
+			StopCoroutine(Gravity());
+			mustDrop = false;
+		}
 		if (mustSpawn) {
 			rotationState = 0;
 			if (currentPieceIndex == 10)
@@ -110,7 +114,7 @@ public class TetrisBehaviour : MonoBehaviour {
 			StartCoroutine(MovePiece(Input.GetAxisRaw("Horizontal")));
 		}
 		for (int i = 0; i < 4; i++) {
-			blocks[i].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
+			blocks[i].GetComponent<SpriteRenderer>().sprite = sprites[i];
 		}
 		if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.UpArrow)) {
 			RotatePositive();
@@ -120,7 +124,7 @@ public class TetrisBehaviour : MonoBehaviour {
 		}
 	}
 
-	(bool, Queue<int>, Stack<int>) CheckPositions(int xChange, int yChange, bool movement) {
+	(bool, Queue<int>, Stack<int>) CheckPositions(int xChange, int yChange, string condition) {
 		bool clear = true;
 		Queue<int> q_positions = new Queue<int>();
 		Stack<int> s_positions = new Stack<int>();
@@ -128,15 +132,22 @@ public class TetrisBehaviour : MonoBehaviour {
 			for (int j = 0; j < length; j++) {
 				for (int l = 0; l < 4; l++) {
 					if (grid[i, j] == blocks[l]) {
-						if (movement && xChange> 0) {
+						if (condition == "move" && xChange> 0) {
 							s_positions.Push(j);
 							s_positions.Push(i);
 						}
 						else {
+							Debug.Log(i);
+							Debug.Log(j);
 							q_positions.Enqueue(i);
 							q_positions.Enqueue(j);
 						}
-						if (grid[i + xChange, j + yChange].tag.Contains("Solid")) {
+						if (condition == "rotate") {
+							if (grid[i + rotationOfset[xChange,yChange,l].x, j + rotationOfset[xChange,yChange,l].y].tag.Contains("Solid")) {
+								clear = false;
+							}
+						}
+						else if(grid[i + xChange, j + yChange].tag.Contains("Solid")) {
 							clear = false;
 						}
 					}
@@ -146,13 +157,66 @@ public class TetrisBehaviour : MonoBehaviour {
 		return (clear,q_positions,s_positions);
 	}
 	void RotatePositive() {
-		switch (currentPieceIndex, rotationState) {
-			case (0,0):
+		int rotationIndex = 0;
+		switch (rotationState) {
+			case 0:
+				rotationIndex = 0;
 				break;
+			case 1:
+				rotationIndex = 2;
+				break;
+			case 2:
+				rotationIndex = 4;
+				break;
+			case 3:
+				rotationIndex = 6;
+				break;
+		}
+		(bool, Queue<int>, Stack<int>) p_data= CheckPositions(currentPieceIndex, rotationIndex, "rotate");
+		if (p_data.Item1) {
+			for (int i = 0; i < 4; i++) {
+				int tempX = p_data.Item2.Dequeue();
+				int tempY = p_data.Item2.Dequeue();
+				ChangeSprite(tempX, tempY);
+				grid[tempX + rotationOfset[currentPieceIndex, rotationIndex, i].x, tempY + rotationOfset[currentPieceIndex, rotationIndex, i].y].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
+				blocks[i] = grid[tempX + rotationOfset[currentPieceIndex, rotationIndex, i].x, tempY + rotationOfset[currentPieceIndex, rotationIndex, i].y];
+			}
+			rotationState++;
+		}
+		if (rotationState == 4) {
+			rotationState = 0;
 		}
 	}
 	void RotateNegative() {
-
+		int rotationIndex = 0;
+		switch (rotationState) {
+			case 0:
+				rotationIndex = 7;
+				break;
+			case 1:
+				rotationIndex = 5;
+				break;
+			case 2:
+				rotationIndex = 3;
+				break;
+			case 3:
+				rotationIndex = 1;
+				break;
+		}
+		(bool, Queue<int>, Stack<int>) n_data = CheckPositions(currentPieceIndex, rotationIndex, "rotate");
+		if (n_data.Item1) {
+			for (int i = 0; i < 4; i++) {
+				int tempX = n_data.Item2.Dequeue();
+				int tempY = n_data.Item2.Dequeue();
+				ChangeSprite(tempX, tempY);
+				grid[tempX + rotationOfset[currentPieceIndex, rotationIndex, i].x, tempY + rotationOfset[currentPieceIndex, rotationIndex, i].y].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
+				blocks[i] = grid[tempX + rotationOfset[currentPieceIndex, rotationIndex, i].x, tempY + rotationOfset[currentPieceIndex, rotationIndex, i].y];
+			}
+			rotationState--;
+		}
+		if (rotationState == -1) {
+			rotationState = 3;
+		}
 	}
 	void WallKick() {
 
@@ -163,7 +227,7 @@ public class TetrisBehaviour : MonoBehaviour {
 		canMove = false;
 		yield return new WaitForSeconds(0.05f);
 
-		(bool m_clear, Queue<int> q_positions, Stack<int> s_positions) = CheckPositions((int)direction, 0, true);
+		(bool m_clear, Queue<int> q_positions, Stack<int> s_positions) = CheckPositions((int)direction, 0, "move");
 		
 		if (m_clear) {
 			for (int i = 0; i < 4; i++) {
@@ -190,7 +254,7 @@ public class TetrisBehaviour : MonoBehaviour {
 	IEnumerator Gravity() {
 		mustDrop = false;
 		yield return new WaitForSeconds(gravityDelay);
-		(bool g_clear, Queue<int> positions, Stack<int> notUsed) = CheckPositions(0, -1, false);
+		(bool g_clear, Queue<int> positions, Stack<int> notUsed) = CheckPositions(0, -1, null);
 		if (g_clear) {
 			for (int i = 0; i < 4; i++) {
 				int tempX = positions.Dequeue();

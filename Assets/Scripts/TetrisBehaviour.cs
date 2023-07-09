@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class TetrisBehaviour : MonoBehaviour {
-	int width = 12;
+	int width = 14;
 	int length = 25;
 
-	public GameObject[,] grid = new GameObject[12,25];
+	public GameObject[,] grid = new GameObject[14,25];
 	public GameObject tile, matrix;
 	public Sprite[] sprites;
 	bool mustSpawn = true;
@@ -16,36 +16,39 @@ public class TetrisBehaviour : MonoBehaviour {
 	int currentPieceIndex = 10;
 	GameObject[] blocks = new GameObject[4];
 	public float gravityDelay, lockDelay;
-	public bool justMoved;
 	int rotationState = 0;
 	Vector2Int[,,] rotationOfset;
+	Vector2Int[,] wallKickOfset, i_wallKickOfset;
+	int[] positionsX = new int[8]; 
+	int[] positionsY = new int[8];
+	Coroutine gravity;
 
 	void Start() {
-		rotationOfset = new Vector2Int[7, 8, 4] { { {new Vector2Int(2, 1), new Vector2Int(1, 0), new Vector2Int(0, -1), new Vector2Int(-1, -2) },
+		rotationOfset = new Vector2Int[7, 8, 4] { { {new Vector2Int(2, 1), new Vector2Int(1, 0), new Vector2Int(0, -1), new Vector2Int(-1, -2) }, //I piece
 												  { new Vector2Int(-2, -1), new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(1, 2) },
 												  { new Vector2Int(1, -2), new Vector2Int(0, -1), new Vector2Int(-1, 0), new Vector2Int(-2, 1) },
 												  { new Vector2Int(-1, 2), new Vector2Int(0, 1), new Vector2Int(1, 0), new Vector2Int(2, -1) },
-												  { new Vector2Int(-1, -1), new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(1, 2) },
-												  { new Vector2Int(1, 1), new Vector2Int(1, 0), new Vector2Int(0, -1), new Vector2Int(-1, -2) },
+												  { new Vector2Int(-2, -1), new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(1, 2) },
+												  { new Vector2Int(2, 1), new Vector2Int(1, 0), new Vector2Int(0, -1), new Vector2Int(-1, -2) },
 												  { new Vector2Int(-1, 2), new Vector2Int(0, 1), new Vector2Int(1, 0), new Vector2Int(2, -1) },
 												  { new Vector2Int(1, -2), new Vector2Int(0, -1), new Vector2Int(-1, 0), new Vector2Int(-2, 1) } },
-												{ { new Vector2Int(1, 1), new Vector2Int(2, 0), new Vector2Int(0, 0), new Vector2Int(-1, -1) },
-												  { new Vector2Int(-1, -1), new Vector2Int(-2, 0), new Vector2Int(0, 0), new Vector2Int(1, 1) },
-												  { new Vector2Int(1, -1), new Vector2Int(0, -2), new Vector2Int(0, 0), new Vector2Int(-1, 1) },
-												  { new Vector2Int(-1, 1), new Vector2Int(0, 2), new Vector2Int(0, 0), new Vector2Int(1, -1) },
-												  { new Vector2Int(-1, -1), new Vector2Int(-2, 0), new Vector2Int(0, 0), new Vector2Int(1, 1) },
-												  { new Vector2Int(1, 1), new Vector2Int(2, 0), new Vector2Int(0, 0), new Vector2Int(-1, -1) },
-												  { new Vector2Int(-1, 1), new Vector2Int(0, 2), new Vector2Int(0, 0), new Vector2Int(1, -1) },
-												  { new Vector2Int(1, -1), new Vector2Int(0, -2), new Vector2Int(0, 0), new Vector2Int(-1, -1) } },
-												{ { new Vector2Int(1, 1), new Vector2Int(0, 0), new Vector2Int(-1, -1), new Vector2Int(0, -2) },
+												{ { new Vector2Int(1, 1), new Vector2Int(0, 0), new Vector2Int(-1, -1), new Vector2Int(2, 0) },  //J piece
+												  { new Vector2Int(-1, -1), new Vector2Int(0, 0), new Vector2Int(1, 1), new Vector2Int(-2, 0) },
+												  { new Vector2Int(1, -1), new Vector2Int(0, 0), new Vector2Int(-1, 1), new Vector2Int(0, -2) },
+												  { new Vector2Int(-1, 1), new Vector2Int(0, 0), new Vector2Int(1, -1), new Vector2Int(0, 2) },
+												  { new Vector2Int(-1, -1), new Vector2Int(0, 0), new Vector2Int(1, 1), new Vector2Int(-2, 0) },
+												  { new Vector2Int(1, 1), new Vector2Int(0, 0), new Vector2Int(-1, -1), new Vector2Int(2, 0) },
+												  { new Vector2Int(-1, 1), new Vector2Int(0, 0), new Vector2Int(1, -1), new Vector2Int(0, 2) },
+												  { new Vector2Int(1, -1), new Vector2Int(0, 0), new Vector2Int(-1, 1), new Vector2Int(0, -2) } },
+												{ { new Vector2Int(1, 1), new Vector2Int(0, 0), new Vector2Int(-1, -1), new Vector2Int(0, -2) },  //L piece
 												  { new Vector2Int(-1, -1), new Vector2Int(0, 0), new Vector2Int(1, 1), new Vector2Int(0, 2) },
 												  { new Vector2Int(1, -1), new Vector2Int(0, 0), new Vector2Int(-1, 1), new Vector2Int(-2, 0) },
 												  { new Vector2Int(-1, 1), new Vector2Int(0, 0), new Vector2Int(1, -1), new Vector2Int(2, 0) },
-												  { new Vector2Int(1, -1), new Vector2Int(0, 0), new Vector2Int(1, 1), new Vector2Int(0, 2) },
-												  { new Vector2Int(-1, 1), new Vector2Int(0, 0), new Vector2Int(-1, -1), new Vector2Int(0, -2) },
+												  { new Vector2Int(-1, -1), new Vector2Int(0, 0), new Vector2Int(1, 1), new Vector2Int(0, 2) },
+												  { new Vector2Int(1, 1), new Vector2Int(0, 0), new Vector2Int(-1, -1), new Vector2Int(0, -2) },
 												  { new Vector2Int(-1, 1), new Vector2Int(0, 0), new Vector2Int(1, -1), new Vector2Int(2, 0) },
 												  { new Vector2Int(1, -1), new Vector2Int(0, 0), new Vector2Int(-1, 1), new Vector2Int(-2, 0) } },
-												{ { new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0) },
+												{ { new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0) },  //O piece
 												  { new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0) },
 												  { new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0) },
 												  { new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0) },
@@ -53,7 +56,7 @@ public class TetrisBehaviour : MonoBehaviour {
 												  { new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0) },
 												  { new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0) },
 												  { new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0) } },
-												{ { new Vector2Int(1, 1), new Vector2Int(0, 0), new Vector2Int(1, -1), new Vector2Int(0, -2) },
+												{ { new Vector2Int(1, 1), new Vector2Int(0, 0), new Vector2Int(1, -1), new Vector2Int(0, -2) },  //S piece
 												  { new Vector2Int(-1, -1), new Vector2Int(0, 0), new Vector2Int(-1, 1), new Vector2Int(0, 2) },
 												  { new Vector2Int(1, -1), new Vector2Int(0, 0), new Vector2Int(-1, -1), new Vector2Int(-2, 0) },
 												  { new Vector2Int(-1, 1), new Vector2Int(0, 0), new Vector2Int(1, 1), new Vector2Int(2, 0) },
@@ -61,7 +64,7 @@ public class TetrisBehaviour : MonoBehaviour {
 												  { new Vector2Int(1, 1), new Vector2Int(0, 0), new Vector2Int(1, -1), new Vector2Int(0, -2) },
 												  { new Vector2Int(-1, 1), new Vector2Int(0, 0), new Vector2Int(1, 1), new Vector2Int(2, 0) },
 												  { new Vector2Int(1, -1), new Vector2Int(0, 0), new Vector2Int(-1, -1), new Vector2Int(-2, 0) } },
-												{ { new Vector2Int(1, 1), new Vector2Int(0, 0), new Vector2Int(1, -1), new Vector2Int(-1, -1) },
+												{ { new Vector2Int(1, 1), new Vector2Int(0, 0), new Vector2Int(1, -1), new Vector2Int(-1, -1) },  //T piece
 												  { new Vector2Int(-1, -1), new Vector2Int(0, 0), new Vector2Int(-1, 1), new Vector2Int(1, 1) },
 												  { new Vector2Int(1, -1), new Vector2Int(0, 0), new Vector2Int(-1, -1), new Vector2Int(-1, 1) },
 												  { new Vector2Int(-1, 1), new Vector2Int(0, 0), new Vector2Int(1, 1), new Vector2Int(1, -1) },
@@ -69,14 +72,30 @@ public class TetrisBehaviour : MonoBehaviour {
 												  { new Vector2Int(1, 1), new Vector2Int(0, 0), new Vector2Int(1, -1), new Vector2Int(-1, -1) },
 												  { new Vector2Int(-1, 1), new Vector2Int(0, 0), new Vector2Int(1, 1), new Vector2Int(1, -1) },
 												  { new Vector2Int(1, -1), new Vector2Int(0, 0), new Vector2Int(-1, -1), new Vector2Int(-1, 1) } },
-												{ { new Vector2Int(2, 0), new Vector2Int(0, 0), new Vector2Int(1, -1), new Vector2Int(-1, -1) },
+												{ { new Vector2Int(2, 0), new Vector2Int(0, 0), new Vector2Int(1, -1), new Vector2Int(-1, -1) },  //Z piece
 												  { new Vector2Int(-2, 0), new Vector2Int(0, 0), new Vector2Int(-1, 1), new Vector2Int(1, 1) },
 												  { new Vector2Int(0, -2), new Vector2Int(0, 0), new Vector2Int(-1, -1), new Vector2Int(-1, 1) },
 												  { new Vector2Int(0, 2), new Vector2Int(0, 0), new Vector2Int(1, 1), new Vector2Int(1, -1) },
-												  { new Vector2Int(-1, -1), new Vector2Int(0, 0), new Vector2Int(-1, 1), new Vector2Int(1, 1) },
-												  { new Vector2Int(1, 1), new Vector2Int(0, 0), new Vector2Int(1, -1), new Vector2Int(-1, -1) },
-												  { new Vector2Int(-1, 1), new Vector2Int(0, 0), new Vector2Int(1, 1), new Vector2Int(1, -1) },
-												  { new Vector2Int(1, -1), new Vector2Int(0, 0), new Vector2Int(-1, -1), new Vector2Int(-1, 1) } } };
+												  { new Vector2Int(-2, 0), new Vector2Int(0, 0), new Vector2Int(-1, 1), new Vector2Int(1, 1) },
+												  { new Vector2Int(2, 0), new Vector2Int(0, 0), new Vector2Int(1, -1), new Vector2Int(-1, -1) },
+												  { new Vector2Int(0, 2), new Vector2Int(0, 0), new Vector2Int(1, 1), new Vector2Int(1, -1) },
+												  { new Vector2Int(0, -2), new Vector2Int(0, 0), new Vector2Int(-1, -1), new Vector2Int(-1, 1) } } };
+		wallKickOfset = new Vector2Int[8, 4] { { new Vector2Int(-1,0), new Vector2Int(-1, 1), new Vector2Int(0, -2), new Vector2Int(-1, -2) },
+											   { new Vector2Int(1,0), new Vector2Int(1, -1), new Vector2Int(0, 2), new Vector2Int(1, 2) },
+											   { new Vector2Int(1,0), new Vector2Int(1, -1), new Vector2Int(0, 2), new Vector2Int(1, 2) },
+											   { new Vector2Int(-1,0), new Vector2Int(-1, 1), new Vector2Int(0, -2), new Vector2Int(-1, -2)},
+											   { new Vector2Int(1,0), new Vector2Int(1, 1), new Vector2Int(0, -2), new Vector2Int(1, -2)},
+											   { new Vector2Int(-1,0), new Vector2Int(-1, -1), new Vector2Int(0, 2), new Vector2Int(-1, 2)},
+											   { new Vector2Int(-1,0), new Vector2Int(-1, -1), new Vector2Int(0, 2), new Vector2Int(-1, 2)},
+											   { new Vector2Int(1,0), new Vector2Int(1, 1), new Vector2Int(0, -2), new Vector2Int(1, -2)}};
+		i_wallKickOfset = new Vector2Int[8, 4] { { new Vector2Int(-2,0), new Vector2Int(1, 0), new Vector2Int(-2, -1), new Vector2Int(1, 2) },
+											   { new Vector2Int(2,0), new Vector2Int(-1, 0), new Vector2Int(2, 1), new Vector2Int(-1, -2) },
+											   { new Vector2Int(-1,0), new Vector2Int(2, 0), new Vector2Int(-1, 2), new Vector2Int(2, -1) },
+											   { new Vector2Int(1,0), new Vector2Int(-2, 0), new Vector2Int(1, -2), new Vector2Int(-2, 1)},
+											   { new Vector2Int(2,0), new Vector2Int(-1, 0), new Vector2Int(2, 1), new Vector2Int(-1, -2)},
+											   { new Vector2Int(-2,0), new Vector2Int(1, 0), new Vector2Int(-2, -1), new Vector2Int(1, 2)},
+											   { new Vector2Int(1,0), new Vector2Int(-2, 0), new Vector2Int(1, -2), new Vector2Int(-2, 1)},
+											   { new Vector2Int(-1,0), new Vector2Int(2, 0), new Vector2Int(-1, 2), new Vector2Int(2, -1)} };
 		grid = new GameObject[width, length];
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < length; j++) {
@@ -94,6 +113,8 @@ public class TetrisBehaviour : MonoBehaviour {
 			mustDrop = false;
 		}
 		if (mustSpawn) {
+			gravityDelay = 0.5f;
+			lockDelay = 1f;
 			rotationState = 0;
 			if (currentPieceIndex == 10)
 				currentPieceIndex = spawnSystem.ChoseNextPiece(1, true);
@@ -108,13 +129,13 @@ public class TetrisBehaviour : MonoBehaviour {
 			canMove = true;
 		}
 		if (mustDrop) {
-			StartCoroutine(Gravity());
+			gravity = StartCoroutine(Gravity());
 		}
 		if (canMove && Input.GetAxisRaw("Horizontal") != 0) {
 			StartCoroutine(MovePiece(Input.GetAxisRaw("Horizontal")));
 		}
 		for (int i = 0; i < 4; i++) {
-			blocks[i].GetComponent<SpriteRenderer>().sprite = sprites[i];
+			blocks[i].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
 		}
 		if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.UpArrow)) {
 			RotatePositive();
@@ -122,42 +143,61 @@ public class TetrisBehaviour : MonoBehaviour {
 		if (Input.GetKeyDown(KeyCode.Z)) {
 			RotateNegative();
 		}
+		if (Input.GetKeyDown(KeyCode.DownArrow)) {
+			//Debug.Log("SD");
+			StopCoroutine(gravity);
+			gravityDelay = 0.05f;
+			lockDelay = 0.25f;
+			mustDrop = true;
+		}
+		else if (Input.GetKeyUp(KeyCode.DownArrow)) { 
+			StopCoroutine(gravity);
+			gravityDelay = 0.5f;
+			mustDrop = true;
+		}
+		if (Input.GetKeyDown(KeyCode.Space)) {
+			StopCoroutine(gravity);
+			gravityDelay = 0;
+			lockDelay = 0;
+			mustDrop = true;
+		}
 	}
 
-	(bool, Queue<int>, Stack<int>) CheckPositions(int xChange, int yChange, string condition) {
+	(bool, Queue<int>) CheckPositions(int xChange, int yChange, string condition) {
 		bool clear = true;
 		Queue<int> q_positions = new Queue<int>();
-		Stack<int> s_positions = new Stack<int>();
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < length; j++) {
-				for (int l = 0; l < 4; l++) {
-					if (grid[i, j] == blocks[l]) {
-						if (condition == "move" && xChange> 0) {
-							s_positions.Push(j);
-							s_positions.Push(i);
-						}
-						else {
-							Debug.Log(i);
-							Debug.Log(j);
-							q_positions.Enqueue(i);
-							q_positions.Enqueue(j);
-						}
-						if (condition == "rotate") {
-							if (grid[i + rotationOfset[xChange,yChange,l].x, j + rotationOfset[xChange,yChange,l].y].tag.Contains("Solid")) {
+		int blocksFound = 0;
+		while (blocksFound < 4) {
+			for (int i = 0; i < width; i++) {
+				for (int j = 0; j < length; j++) {
+					if (blocksFound != 4 && grid[i, j] == blocks[blocksFound]) {
+						q_positions.Enqueue(i);
+						q_positions.Enqueue(j);
+						try {
+							if (condition == "rotate") {
+								if (grid[i + rotationOfset[xChange, yChange, blocksFound].x, j + rotationOfset[xChange, yChange, blocksFound].y].tag.Contains("Solid")) {
+									clear = false;
+								}
+							}
+							else if (grid[i + xChange, j + yChange].tag.Contains("Solid")) {
 								clear = false;
 							}
+							blocksFound++;
 						}
-						else if(grid[i + xChange, j + yChange].tag.Contains("Solid")) {
+						catch (IndexOutOfRangeException) {
 							clear = false;
+							blocksFound++;
+							continue;
 						}
 					}
 				}
 			}
 		}
-		return (clear,q_positions,s_positions);
+		return (clear,q_positions);
 	}
 	void RotatePositive() {
 		int rotationIndex = 0;
+		bool wallKicked = false;
 		switch (rotationState) {
 			case 0:
 				rotationIndex = 0;
@@ -172,54 +212,100 @@ public class TetrisBehaviour : MonoBehaviour {
 				rotationIndex = 6;
 				break;
 		}
-		(bool, Queue<int>, Stack<int>) p_data= CheckPositions(currentPieceIndex, rotationIndex, "rotate");
-		if (p_data.Item1) {
-			for (int i = 0; i < 4; i++) {
-				int tempX = p_data.Item2.Dequeue();
-				int tempY = p_data.Item2.Dequeue();
-				ChangeSprite(tempX, tempY);
-				grid[tempX + rotationOfset[currentPieceIndex, rotationIndex, i].x, tempY + rotationOfset[currentPieceIndex, rotationIndex, i].y].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
-				blocks[i] = grid[tempX + rotationOfset[currentPieceIndex, rotationIndex, i].x, tempY + rotationOfset[currentPieceIndex, rotationIndex, i].y];
+		(bool, Queue<int>) p_data= CheckPositions(currentPieceIndex, rotationIndex, "rotate");
+		for (int i = 0; i < 4; i++) {
+			int tempX = p_data.Item2.Dequeue(); positionsX[i] = tempX;
+			int tempY = p_data.Item2.Dequeue(); positionsY[i] = tempY;
+			ChangeSprite(tempX, tempY);
+			grid[tempX + rotationOfset[currentPieceIndex, rotationIndex, i].x, tempY + rotationOfset[currentPieceIndex, rotationIndex, i].y].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
+			blocks[i] = grid[tempX + rotationOfset[currentPieceIndex, rotationIndex, i].x, tempY + rotationOfset[currentPieceIndex, rotationIndex, i].y];
+		}
+		if (!p_data.Item1) {
+			wallKicked = WallKick(rotationIndex);
+			if (!wallKicked) {
+				for (int i = 0; i< 4;i++) {
+					ChangeSprite(positionsX[i] + rotationOfset[currentPieceIndex, rotationIndex, i].x, positionsY[i] + rotationOfset[currentPieceIndex, rotationIndex, i].y);
+					grid[positionsX[i], positionsY[i]].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
+					blocks[i] = grid[positionsX[i], positionsY[i]];
+				}
 			}
+		}
+		if (p_data.Item1 || wallKicked)
 			rotationState++;
-		}
-		if (rotationState == 4) {
+		if (rotationState == 4)
 			rotationState = 0;
-		}
 	}
 	void RotateNegative() {
 		int rotationIndex = 0;
+		bool wallKicked = false;
 		switch (rotationState) {
 			case 0:
 				rotationIndex = 7;
 				break;
 			case 1:
-				rotationIndex = 5;
+				rotationIndex = 1;
 				break;
 			case 2:
 				rotationIndex = 3;
 				break;
 			case 3:
-				rotationIndex = 1;
+				rotationIndex = 5;
 				break;
 		}
-		(bool, Queue<int>, Stack<int>) n_data = CheckPositions(currentPieceIndex, rotationIndex, "rotate");
-		if (n_data.Item1) {
-			for (int i = 0; i < 4; i++) {
-				int tempX = n_data.Item2.Dequeue();
-				int tempY = n_data.Item2.Dequeue();
-				ChangeSprite(tempX, tempY);
-				grid[tempX + rotationOfset[currentPieceIndex, rotationIndex, i].x, tempY + rotationOfset[currentPieceIndex, rotationIndex, i].y].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
-				blocks[i] = grid[tempX + rotationOfset[currentPieceIndex, rotationIndex, i].x, tempY + rotationOfset[currentPieceIndex, rotationIndex, i].y];
+		(bool, Queue<int>) n_data = CheckPositions(currentPieceIndex, rotationIndex, "rotate");
+		for (int i = 0; i < 4; i++) {
+			int tempX = n_data.Item2.Dequeue(); positionsX[i] = tempX;
+			int tempY = n_data.Item2.Dequeue(); positionsY[i] = tempY;
+			ChangeSprite(tempX, tempY);
+			grid[tempX + rotationOfset[currentPieceIndex, rotationIndex, i].x, tempY + rotationOfset[currentPieceIndex, rotationIndex, i].y].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
+			blocks[i] = grid[tempX + rotationOfset[currentPieceIndex, rotationIndex, i].x, tempY + rotationOfset[currentPieceIndex, rotationIndex, i].y];
+		}
+		if (!n_data.Item1) {
+			wallKicked = WallKick(rotationIndex);
+			if (!wallKicked) {
+				for (int i = 0; i < 4; i++) {
+					ChangeSprite(positionsX[i] + rotationOfset[currentPieceIndex, rotationIndex, i].x, positionsY[i] + rotationOfset[currentPieceIndex, rotationIndex, i].y);
+					grid[positionsX[i], positionsY[i]].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
+					blocks[i] = grid[positionsX[i], positionsY[i]];
+				}
 			}
+		}
+		if (n_data.Item1 || wallKicked)
 			rotationState--;
-		}
-		if (rotationState == -1) {
+		if (rotationState == -1) 
 			rotationState = 3;
-		}
 	}
-	void WallKick() {
-
+	bool WallKick(int rotation) {
+		(bool, Queue<int>) wk_data = (false, new Queue<int>());
+		bool cleared = false;
+		Vector2Int[,] wallKickData;
+		switch (currentPieceIndex) {
+			case 0:
+				wallKickData = i_wallKickOfset;
+				break;
+			case 3:
+				wallKickData = null;
+				break;
+			default:
+				wallKickData = wallKickOfset;
+				break;
+		}
+		for (int i = 0; i < 4; i++) {
+			if (!cleared) {
+				wk_data = CheckPositions(wallKickData[rotation, i].x, wallKickData[rotation, i].y, "WK");
+				if (wk_data.Item1) {
+					for (int j = 0; j < 4; j++) {
+						int tempX = wk_data.Item2.Dequeue();
+						int tempY = wk_data.Item2.Dequeue();
+						ChangeSprite(tempX, tempY);
+						grid[tempX + wallKickData[rotation, i].x, tempY + wallKickData[rotation, i].y].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
+						blocks[j] = grid[tempX + wallKickData[rotation, i].x, tempY + wallKickData[rotation, i].y];
+					}
+					cleared = true;
+				}
+			}
+		}
+		return cleared;
 	}
 
 	IEnumerator MovePiece(float direction) {
@@ -227,26 +313,19 @@ public class TetrisBehaviour : MonoBehaviour {
 		canMove = false;
 		yield return new WaitForSeconds(0.05f);
 
-		(bool m_clear, Queue<int> q_positions, Stack<int> s_positions) = CheckPositions((int)direction, 0, "move");
+		(bool m_clear, Queue<int> q_positions) = CheckPositions((int)direction, 0, "move");
 		
 		if (m_clear) {
 			for (int i = 0; i < 4; i++) {
-				if (direction < 0) {
-					tempX = q_positions.Dequeue();
-					tempY = q_positions.Dequeue();
-				}
-				else {
-					tempX = s_positions.Pop();
-					tempY = s_positions.Pop();
-				}
+				tempX = q_positions.Dequeue();
+				tempY = q_positions.Dequeue();
 				ChangeSprite(tempX, tempY);
 				grid[tempX + (int)Input.GetAxisRaw("Horizontal"), tempY].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
 				blocks[i] = grid[tempX + (int)Input.GetAxisRaw("Horizontal"), tempY];
-				if (direction< 0) {
-					//Array.Reverse(blocks);
-				}
 			}
-			justMoved = true;
+			if (CheckPositions(0, -1, null).Item1) {
+				StopCoroutine(LockDelay());
+			}
 		}
 		canMove = true;
 	}
@@ -254,7 +333,7 @@ public class TetrisBehaviour : MonoBehaviour {
 	IEnumerator Gravity() {
 		mustDrop = false;
 		yield return new WaitForSeconds(gravityDelay);
-		(bool g_clear, Queue<int> positions, Stack<int> notUsed) = CheckPositions(0, -1, null);
+		(bool g_clear, Queue<int> positions) = CheckPositions(0, -1, null);
 		if (g_clear) {
 			for (int i = 0; i < 4; i++) {
 				int tempX = positions.Dequeue();
@@ -266,67 +345,80 @@ public class TetrisBehaviour : MonoBehaviour {
 			mustDrop = true;
 		}
 		else {
-			StartCoroutine(LockDelay(g_clear));
+			StartCoroutine(LockDelay());
 		}
 		StopCoroutine(Gravity());
 	}
 
-	IEnumerator LockDelay(bool clear) {
+	IEnumerator LockDelay() {
 		yield return new WaitForSeconds(lockDelay);
-		if (!clear && !justMoved) {
+		bool clear = CheckPositions(0, -1, null).Item1;
+		if (!clear) {
 			for (int i = 0; i < 4; i++) {
-				blocks[i].tag = "Solid";
+				blocks[i].tag = "Solid_"+currentPieceIndex.ToString();
+				blocks[i].name = currentPieceIndex.ToString();
 			}
 			mustSpawn = true;
 		}
 		else {
-			justMoved = false;
 			mustDrop = true;
 		}
-		StopCoroutine(LockDelay(clear));
 	}
 
 	void ChangeSprite(int cs_width, int cs_length) {
-		switch (cs_width) {
-			case 0 when cs_length != 0 && cs_length < 21:
-				grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[15];
-				grid[cs_width, cs_length].tag = "Solid_W";
-				break;
-			case 0 when cs_length < 21:
-				grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[9];
-				grid[cs_width, cs_length].tag = "Solid_W";
-				break;
-			case 1 when cs_length != 0 && cs_length < 21:
-				grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[13];
-				break;
-			case 10 when cs_length != 0 && cs_length < 21:
-				grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[14];
-				break;
-			case 11 when cs_length != 0 && cs_length < 21:
-				grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[16];
-				grid[cs_width, cs_length].tag = "Solid_W";
-				break;
-			case 11 when cs_length < 21:
-				grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[10];
-				grid[cs_width, cs_length].tag = "Solid_W";
-				break;
-			default:
-				if (cs_length == 0) {
-					grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[7];
-					grid[cs_width, cs_length].tag = "Solid";
-				}
-				else if (cs_length > 20) {
+		if (grid[cs_width, cs_length].tag.Contains("Solid_")) {
+			grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[Convert.ToInt32(grid[cs_width, cs_length].name)];
+		}
+		else {
+			switch (cs_width) {
+				case 0:
 					grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[8];
-					if (cs_width == 0 || cs_width == 11)
-						grid[cs_width, cs_length].tag = "Solid_W";
-					else
+					grid[cs_width, cs_length].tag = "Solid";
+					break;
+				case 1 when cs_length != 0 && cs_length < 21:
+					grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[15];
+					grid[cs_width, cs_length].tag = "Solid";
+					break;
+				case 1 when cs_length < 21:
+					grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[9];
+					grid[cs_width, cs_length].tag = "Solid";
+					break;
+				case 2 when cs_length != 0 && cs_length < 21:
+					grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[13];
+					break;
+				case 11 when cs_length != 0 && cs_length < 21:
+					grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[14];
+					break;
+				case 12 when cs_length != 0 && cs_length < 21:
+					grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[16];
+					grid[cs_width, cs_length].tag = "Solid";
+					break;
+				case 12 when cs_length < 21:
+					grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[10];
+					grid[cs_width, cs_length].tag = "Solid";
+					break;
+				case 13:
+					grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[8];
+					grid[cs_width, cs_length].tag = "Solid";
+					break;
+				default:
+					if (cs_length == 0) {
+						grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[7];
+						grid[cs_width, cs_length].tag = "Solid";
+					}
+					else if (cs_length > 20) {
+						grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[8];
+						if (cs_width == 1 || cs_width == 12)
+							grid[cs_width, cs_length].tag = "Solid";
+						else
+							grid[cs_width, cs_length].tag = "Empty";
+					}
+					else {
+						grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[11];
 						grid[cs_width, cs_length].tag = "Empty";
-				}
-				else {
-					grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[11];
-					grid[cs_width, cs_length].tag = "Empty";
-				}
-				break;
+					}
+					break;
+			}
 		}
 	}
 }

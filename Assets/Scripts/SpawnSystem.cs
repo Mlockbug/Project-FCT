@@ -24,7 +24,7 @@ public class SpawnSystem : MonoBehaviour
                                                            { new Vector2(-1f,0.5f), new Vector2(0f, 0.5f), new Vector2(0f, -0.5f), new Vector2(1f, -0.5f) }};
 		manager = GameObject.Find("Game manager").GetComponent<TetrisBehaviour>();
         grid = manager.grid;
-        spawnArea = new GameObject[,] { { grid[4, 22], grid[5, 22], grid[6,22], grid[7,22]}, { grid[4, 23], grid[5, 23], grid[6, 23], grid[7, 23]} };
+        spawnArea = new GameObject[,] { { grid[5, 22], grid[6, 22], grid[7,22], grid[8,22]}, { grid[5, 23], grid[6, 23], grid[7, 23], grid[8, 23]} };
         for (int i = 0;  i < 5; i++) {
             nextPieceSpawns[i] = GameObject.Find("Next pieces").transform.GetChild(i).gameObject;
 		}

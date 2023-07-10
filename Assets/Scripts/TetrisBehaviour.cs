@@ -144,7 +144,6 @@ public class TetrisBehaviour : MonoBehaviour {
 			RotateNegative();
 		}
 		if (Input.GetKeyDown(KeyCode.DownArrow)) {
-			//Debug.Log("SD");
 			StopCoroutine(gravity);
 			gravityDelay = 0.05f;
 			lockDelay = 0.25f;
@@ -162,6 +161,29 @@ public class TetrisBehaviour : MonoBehaviour {
 			mustDrop = true;
 		}
 	}
+
+	IEnumerator ClearLines(){
+		for (int i = 1; i < 21; i++){
+			bool full = true;
+			for (int j = 0; j < width; j++){
+				if (!grid[j, i].tag.Contains("Solid")){
+					full = false;
+				}
+            }
+			if (full){
+				Debug.Log("ASDASd");
+				for (int k = 0; k < width; k++){
+					for (int l = i; l == 20; l++){
+						grid[k, l].name = grid[k, l + 1].name;
+						ChangeSprite(k, l);
+					}
+				}
+			}
+		}
+		
+		yield return new WaitForSeconds(0.2f);
+		mustSpawn = true;
+    }
 
 	(bool, Queue<int>) CheckPositions(int xChange, int yChange, string condition) {
 		bool clear = true;
@@ -351,14 +373,18 @@ public class TetrisBehaviour : MonoBehaviour {
 	}
 
 	IEnumerator LockDelay() {
-		yield return new WaitForSeconds(lockDelay);
+		float timer = 0;
+		while (CheckPositions(0, -1, null).Item1 && timer < lockDelay){
+			timer += Time.deltaTime;
+			yield return new WaitForEndOfFrame();
+        }
 		bool clear = CheckPositions(0, -1, null).Item1;
 		if (!clear) {
 			for (int i = 0; i < 4; i++) {
 				blocks[i].tag = "Solid_"+currentPieceIndex.ToString();
 				blocks[i].name = currentPieceIndex.ToString();
 			}
-			mustSpawn = true;
+			StartCoroutine(ClearLines());
 		}
 		else {
 			mustDrop = true;

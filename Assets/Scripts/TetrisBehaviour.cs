@@ -135,7 +135,9 @@ public class TetrisBehaviour : MonoBehaviour {
 			StartCoroutine(MovePiece(Input.GetAxisRaw("Horizontal")));
 		}
 		for (int i = 0; i < 4; i++) {
-			blocks[i].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
+			if (blocks[i] != null) {
+				blocks[i].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
+			}
 		}
 		if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.UpArrow)) {
 			RotatePositive();
@@ -163,24 +165,28 @@ public class TetrisBehaviour : MonoBehaviour {
 	}
 
 	IEnumerator ClearLines(){
-		for (int i = 1; i < 21; i++){
+		for (int i = 0; i<4; i++) {
+			blocks[i] = null;
+		}
+		for (int i = 1; i < 21; i++) {
 			bool full = true;
-			for (int j = 0; j < width; j++){
-				if (!grid[j, i].tag.Contains("Solid")){
+			for (int j = 0; j < width; j++) {
+				if (!grid[j, i].tag.Contains("Solid")) {
 					full = false;
 				}
-            }
-			if (full){
+			}
+			if (full) {
 				Debug.Log("ASDASd");
-				for (int k = 0; k < width; k++){
-					for (int l = i; l == 20; l++){
+				for (int k = 0; k < width; k++) {
+					for (int l = i; l < 21; l++) {
 						grid[k, l].name = grid[k, l + 1].name;
+						grid[k, l].tag = grid[k, l + 1].tag;
 						ChangeSprite(k, l);
 					}
 				}
+				i--;
 			}
 		}
-		
 		yield return new WaitForSeconds(0.2f);
 		mustSpawn = true;
     }

@@ -26,8 +26,8 @@ public class TetrisBehaviour : MonoBehaviour {
 	Coroutine gravity;
 	bool dead;
 	GameObject[] ghostBlocks = new GameObject[4];
-	int heldPiece;
-	bool gh_hitFloor;
+	int heldPiece = 11;
+	bool gh_hitFloor, justHeld, holdDelay;
 
 	void Start() {
 		rotationOfset = new Vector2Int[7, 8, 4] { { {new Vector2Int(2, 1), new Vector2Int(1, 0), new Vector2Int(0, -1), new Vector2Int(-1, -2) }, //I piece
@@ -124,7 +124,7 @@ public class TetrisBehaviour : MonoBehaviour {
 			rotationState = 0;
 			if (currentPieceIndex == 10)
 				currentPieceIndex = spawnSystem.ChoseNextPiece(1, true);
-			else
+			else if (!justHeld)
 				currentPieceIndex = spawnSystem.ChoseNextPiece(1, false);
 			for (int i = 0; i < 4; i++){
 				spawnSystem.GetSpawnArea(currentPieceIndex)[i].GetComponent<SpriteRenderer>().sprite = sprites[currentPieceIndex];
@@ -139,6 +139,7 @@ public class TetrisBehaviour : MonoBehaviour {
 			inPlacement= false;
 			canMove = true;
 			gh_hitFloor= false;
+			justHeld = false;
 		}
 		if (mustDrop) {
 			gravity = StartCoroutine(Gravity());
@@ -150,22 +151,43 @@ public class TetrisBehaviour : MonoBehaviour {
 				int tempY = positions.Dequeue();
 				ChangeSprite(tempX, tempY);
 				ghostBlocks[i] = blocks[i];
+
 			}
+			
 			while (!gh_hitFloor) {
 				(bool gh_clear2, Queue<int> positions2) = CheckPositions(0, -1, "GH");
 				if (gh_clear2) {
+					for (int i = 0;i<4; i++) {
+						ghostBlocks[i].tag = "EmptyGH";
+					}
 					for (int i = 0; i < 4; i++) {
 						int tempX = positions2.Dequeue();
 						int tempY = positions2.Dequeue();
 						ChangeSprite(tempX, tempY);
-						grid[tempX, tempY - 1].GetComponent<SpriteRenderer>().sprite = sprites[17];
-						ghostBlocks[i] = grid[tempX, tempY - 1];
-						ghostBlocks[i].tag = "EmptyGH";
+						/*if (grid[tempX, tempY-1].tag.Contains("GH")) {
+							tempY++;
+						}*/
+						grid[tempX, tempY-1].GetComponent<SpriteRenderer>().sprite = sprites[17];
+						ghostBlocks[i].tag = "Empty";
+						ghostBlocks[i] = grid[tempX, tempY-1];
+						
+						ghostBlocks[i].name = i.ToString();
 					}
 				}
 				else {
 					gh_hitFloor = true;
+					for (int i = 0; i < 4; i++) {
+						ghostBlocks[i].tag = "EmptyGH";
+					}
 				}
+				for (int i = 0; i < width; i++) {
+					for (int j = 0; j < length; j++) {
+						if (grid[i, j].tag.Contains("GH")) {
+							grid[i,j].GetComponent<SpriteRenderer>().sprite = sprites[17];
+						}
+					}
+				}
+
 			}
 		}
 
@@ -175,6 +197,33 @@ public class TetrisBehaviour : MonoBehaviour {
 			}
 		}
 		if (!inPlacement) {
+			if (Input.GetKeyDown(KeyCode.C) && !holdDelay) {
+				holdDelay = true;
+				StopCoroutine(gravity);
+				if (heldPiece != 11) {
+					justHeld = true;
+				}
+				inPlacement = true;
+				int temp = currentPieceIndex;
+				currentPieceIndex = heldPiece;
+				heldPiece = temp;
+				
+				mustSpawn = true;
+				Queue<int> positions = CheckPositions(0, 0, "GH").Item2;
+				for (int i = 0; i < 4; i++) {
+					int tempX = positions.Dequeue();
+					int tempY = positions.Dequeue();
+					ChangeSprite(tempX, tempY);
+				}
+				Queue<int> positions2 = CheckPositions(0, 0, null).Item2;
+				for (int i = 0; i < 4; i++) {
+					int tempX = positions2.Dequeue();
+					int tempY = positions2.Dequeue();
+					grid[tempX, tempY].tag = "Empty";
+					ChangeSprite(tempX, tempY);
+				}
+				spawnSystem.ShowHold(heldPiece);
+			}
 			if (canMove && Input.GetAxisRaw("Horizontal") != 0) {
 				StartCoroutine(MovePiece(Input.GetAxisRaw("Horizontal")));
 			}
@@ -217,7 +266,6 @@ public class TetrisBehaviour : MonoBehaviour {
 				}
 			}
 			if (full) {
-				Debug.Log("ASDASd");
 				for (int k = 0; k < width; k++) {
 					for (int l = i; l < 21; l++) {
 						grid[k, l].name = grid[k, l + 1].name;
@@ -255,6 +303,9 @@ public class TetrisBehaviour : MonoBehaviour {
 									clear = false;
 								}
 							}
+							/*else if (condition == "GH"&& (grid[i + xChange, j + yChange].tag.Contains("Solid")|| grid[i + xChange, j + yChange].tag.Contains("GH"))) {
+								clear = false;
+							}*/
 							else if (grid[i + xChange, j + yChange].tag.Contains("Solid")) {
 								clear = false;
 							}
@@ -446,6 +497,8 @@ public class TetrisBehaviour : MonoBehaviour {
 				blocks[i].name = currentPieceIndex.ToString();
 			}
 			StartCoroutine(ClearLines());
+			holdDelay = false;
+			
 		}
 		else {
 			mustDrop = true;
@@ -472,9 +525,11 @@ public class TetrisBehaviour : MonoBehaviour {
 					break;
 				case 2 when cs_length != 0 && cs_length < 21:
 					grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[13];
+					grid[cs_width, cs_length].tag = "Empty";
 					break;
 				case 11 when cs_length != 0 && cs_length < 21:
 					grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[14];
+					grid[cs_width, cs_length].tag = "Empty";
 					break;
 				case 12 when cs_length != 0 && cs_length < 21:
 					grid[cs_width, cs_length].GetComponent<SpriteRenderer>().sprite = sprites[16];

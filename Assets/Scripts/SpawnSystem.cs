@@ -13,6 +13,8 @@ public class SpawnSystem : MonoBehaviour
     Vector2[,] nextPieceSpawnsTileLocations;
     Queue<int> bag = new Queue<int>();
     Queue<GameObject> nextPiecesObjects = new Queue<GameObject>();
+    GameObject holdSpawn;
+    Queue<GameObject> holdObjects = new Queue<GameObject>();
 
     void Start() {
 		nextPieceSpawnsTileLocations = new Vector2[7, 4] { { new Vector2(-0.5f,0f), new Vector2(-1.5f, 0f), new Vector2(0.5f, 0f), new Vector2(1.5f, 0f) },
@@ -28,6 +30,7 @@ public class SpawnSystem : MonoBehaviour
         for (int i = 0;  i < 5; i++) {
             nextPieceSpawns[i] = GameObject.Find("Next pieces").transform.GetChild(i).gameObject;
 		}
+        holdSpawn = GameObject.Find("Hold Spawn");
     }
 
     void Update()
@@ -113,4 +116,15 @@ public class SpawnSystem : MonoBehaviour
 			}
 		}
 	}
+
+    public void ShowHold(int heldPieceIndex) {
+        while (holdObjects.Count > 0) {
+            Destroy(holdObjects.Dequeue());
+        }
+        for (int i = 0; i < 4; i++) {
+            GameObject temp = Instantiate(manager.tile, holdSpawn.transform.position + new Vector3(nextPieceSpawnsTileLocations[heldPieceIndex, i].x, nextPieceSpawnsTileLocations[heldPieceIndex, i].y, 0), Quaternion.identity);
+            holdObjects.Enqueue(temp);
+            temp.GetComponent<SpriteRenderer>().sprite = manager.sprites[heldPieceIndex];
+        }
+    }
 }

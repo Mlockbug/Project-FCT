@@ -13,6 +13,9 @@ TagManager:
   - Solid_4
   - Solid_5
   - Solid_6
+  - Solid_
+  - Solid_GH
+  - EmptyGH
   layers:
   - Default
   - TransparentFX

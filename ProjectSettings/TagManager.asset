@@ -4,9 +4,18 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Solid_W
   - Solid
   - Empty
+  - Solid_0
+  - Solid_1
+  - Solid_2
+  - Solid_3
+  - Solid_4
+  - Solid_5
+  - Solid_6
+  - Solid_
+  - Solid_GH
+  - EmptyGH
   layers:
   - Default
   - TransparentFX

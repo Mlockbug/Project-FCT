@@ -13,6 +13,8 @@ public class SpawnSystem : MonoBehaviour
     Vector2[,] nextPieceSpawnsTileLocations;
     Queue<int> bag = new Queue<int>();
     Queue<GameObject> nextPiecesObjects = new Queue<GameObject>();
+    GameObject holdSpawn;
+    Queue<GameObject> holdObjects = new Queue<GameObject>();
 
     void Start() {
 		nextPieceSpawnsTileLocations = new Vector2[7, 4] { { new Vector2(-0.5f,0f), new Vector2(-1.5f, 0f), new Vector2(0.5f, 0f), new Vector2(1.5f, 0f) },
@@ -24,10 +26,11 @@ public class SpawnSystem : MonoBehaviour
                                                            { new Vector2(-1f,0.5f), new Vector2(0f, 0.5f), new Vector2(0f, -0.5f), new Vector2(1f, -0.5f) }};
 		manager = GameObject.Find("Game manager").GetComponent<TetrisBehaviour>();
         grid = manager.grid;
-        spawnArea = new GameObject[,] { { grid[4, 22], grid[5, 22], grid[6,22], grid[7,22]}, { grid[4, 23], grid[5, 23], grid[6, 23], grid[7, 23]} };
+        spawnArea = new GameObject[,] { { grid[5, 22], grid[6, 22], grid[7,22], grid[8,22]}, { grid[5, 23], grid[6, 23], grid[7, 23], grid[8, 23]} };
         for (int i = 0;  i < 5; i++) {
             nextPieceSpawns[i] = GameObject.Find("Next pieces").transform.GetChild(i).gameObject;
 		}
+        holdSpawn = GameObject.Find("Hold Spawn");
     }
 
     void Update()
@@ -113,4 +116,15 @@ public class SpawnSystem : MonoBehaviour
 			}
 		}
 	}
+
+    public void ShowHold(int heldPieceIndex) {
+        while (holdObjects.Count > 0) {
+            Destroy(holdObjects.Dequeue());
+        }
+        for (int i = 0; i < 4; i++) {
+            GameObject temp = Instantiate(manager.tile, holdSpawn.transform.position + new Vector3(nextPieceSpawnsTileLocations[heldPieceIndex, i].x, nextPieceSpawnsTileLocations[heldPieceIndex, i].y, 0), Quaternion.identity);
+            holdObjects.Enqueue(temp);
+            temp.GetComponent<SpriteRenderer>().sprite = manager.sprites[heldPieceIndex];
+        }
+    }
 }
